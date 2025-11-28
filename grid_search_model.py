@@ -57,8 +57,7 @@ except FileNotFoundError:
 print("Loading game metadata")
 game_data = []
 try:
-    # Based on your logs, you are using steam_new.json.gz
-    with smart_open('steam_new.json.gz', 'rt', encoding='utf-8') as f:
+    with smart_open('steam_reviews.json.gz', 'rt', encoding='utf-8') as f:
         for line in f:
             try:
                 game_data.append(ast.literal_eval(line))
