@@ -297,7 +297,6 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# UPDATED: Use the passed REG_C parameter
 model = LogisticRegression(C=REG_C, max_iter=1000)
 model.fit(X_train_scaled, y_train)
 y_pred_probability = model.predict_proba(X_test_scaled)[:, 1]
@@ -305,5 +304,5 @@ y_pred_probability = model.predict_proba(X_test_scaled)[:, 1]
 auc_score = roc_auc_score(y_test, y_pred_probability)
 
 # Output CSV format for the bash script to capture
-# RESULT: is what is searched for by grid_sweep.sh
-print(f"RESULT: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}, C={REG_C}, AUC={auc_score:.4f}")
+# DATA_ROW: is what is searched for by grid_sweep.sh
+print(f"DATA_ROW: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}, C={REG_C}, AUC={auc_score:.4f}")
