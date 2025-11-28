@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, roc_auc_score, roc_curve, confusion_matrix
+from sklearn.metrics import classification_report, roc_auc_score, roc_curve, confusion_matrix, average_precision_score # Added average_precision_score
 import seaborn as sns
 
 print("Gathering data")
@@ -32,10 +32,6 @@ df = pd.DataFrame(interactions)
 df = df[df['playtime_forever'] > 0]
 
 # Checking popularity of pos
-item_popularity = df.groupby('item_id')['user_id'].nunique().reset_index()
-item_popularity.columns = ['item_id', 'item_popularity']
-
-df = df.merge(item_popularity, on='item_id', how='left')
 
 # 50/50 pos/neg sampling
 played_pairs = set(zip(df['user_id'], df['item_id']))
@@ -71,10 +67,9 @@ df_negative = pd.DataFrame({
 
 # Negative feature
 df_negative['user_items_count'] = df['user_items_count'].values
-df_negative = df_negative.merge(item_popularity, on='item_id', how='left')
 
 # Pos df
-df_positive = df[['user_id', 'item_id', 'user_items_count', 'item_popularity']].copy()
+df_positive = df[['user_id', 'item_id', 'user_items_count']].copy()
 df_positive['target'] = 1
 
 # Together
@@ -91,12 +86,31 @@ print("Training")
 # Bad data handling
 df_model = df_model.dropna()
 
-features = ['user_items_count', 'item_popularity']
-X = df_model[features]
-y = df_model['target']
-
 # Split to 80% train and 20% test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# New split logic:
+train_df, test_df = train_test_split(df_model, test_size=0.2, random_state=42)
+
+print("Calculating popularity on train set")
+# Filter for positives in train to count popularity
+train_positives = train_df[train_df['target'] == 1]
+popularity_map = train_positives.groupby('item_id')['user_id'].nunique().reset_index()
+popularity_map.columns = ['item_id', 'item_popularity']
+
+# Map popularity to train set
+train_df = train_df.merge(popularity_map, on='item_id', how='left')
+train_df['item_popularity'] = train_df['item_popularity'].fillna(0) 
+
+# Map popularity to test set 
+test_df = test_df.merge(popularity_map, on='item_id', how='left')
+test_df['item_popularity'] = test_df['item_popularity'].fillna(0) 
+
+features = ['user_items_count', 'item_popularity']
+X_train = train_df[features]
+y_train = train_df['target']
+X_test = test_df[features]
+y_test = test_df['target']
 
 # Logistic reg classifier
 model = LogisticRegression()
@@ -113,6 +127,11 @@ print(classification_report(y_test, y_pred))
 # Receiver Operating Characteristic Area Under the Curve (basically just a metric to determine acc and Type 1/Type 2 error)
 auc_score = roc_auc_score(y_test, y_pred_probability)
 print(f"ROC AUC Score: {auc_score:.4f}")
+
+# Precision-Recall AUC is better for imbalanced or recommender tasks apparently
+pr_auc = average_precision_score(y_test, y_pred_probability)
+print(f"PR AUC Score (Average Precision): {pr_auc:.4f}")
+# ------------------------
 
 # Plot ROC Curve
 fpr, tpr, thresholds = roc_curve(y_test, y_pred_probability)
