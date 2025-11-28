@@ -15,9 +15,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import multiprocessing
 
-TAG_COUNTS = [10, 25]
-WORD_COUNTS = [0, 50]
-C_VALUES = [0.1]
+TAG_COUNTS = [5, 10, 15, 20, 25, 30, 40] 
+WORD_COUNTS = [50, 75, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+C_VALUES = [0.01, 0.1, 0.5, 1.0, 5.0, 10.0]
 CORES = 10
 
 def smart_open(file_path, mode='rt', encoding='utf-8'):
@@ -143,7 +143,7 @@ user_full_word_counts = {}
 global_word_counter = Counter()
 
 if max(WORD_COUNTS) > 0:
-    print("Tokenizing reviews (this takes a moment)...", file=sys.stderr)
+    print("Tokenizing reviews", file=sys.stderr)
     for uid, text in user_reviews.items():
         tokens = get_tokens(text)
         if tokens:
@@ -273,7 +273,7 @@ def process_job(params):
 if __name__ == '__main__':
     param_list = [(t, w, c) for t in TAG_COUNTS for w in WORD_COUNTS for c in C_VALUES]
     
-    print(f"Starting Sweep of {len(param_list)} jobs using {CORES} cores...", file=sys.stderr)
+    print(f"Starting sweep of {len(param_list)} jobs using {CORES} cores...", file=sys.stderr)
     
     print("Tags,Words,C,AUC")
     
