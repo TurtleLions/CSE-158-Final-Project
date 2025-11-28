@@ -122,7 +122,7 @@ for game in game_data:
 # Tag profiles
 top_tags_counter = Counter(all_tags)
 TOP_TAGS_LIST = [tag for tag, count in top_tags_counter.most_common(TOP_N_TAGS_COUNT)]
-print(f"Top {TOP_N_TAGS_COUNT} tags: {TOP_TAGS_LIST[:5]}...")
+print(f"Top {TOP_N_TAGS_COUNT} tags: {TOP_TAGS_LIST[:TOP_N_TAGS_COUNT]}...")
 
 interactions = []
 user_tag_profiles = {}
@@ -175,7 +175,7 @@ if TOP_N_WORDS_COUNT > 0:
     
     TOP_WORDS_LIST = [w for w, c in global_word_counter.most_common(TOP_N_WORDS_COUNT)]
     TOP_WORDS_SET = set(TOP_WORDS_LIST)
-    print(f"Top {TOP_N_WORDS_COUNT} words: {TOP_WORDS_LIST[:5]}...")
+    print(f"Top {TOP_N_WORDS_COUNT} words: {TOP_WORDS_LIST[:TOP_N_WORDS_COUNT]}...")
 
     # Second pass to build user specific profiles
     for uid, text in user_reviews.items():
