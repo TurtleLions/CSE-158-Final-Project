@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define Grid
-TAG_COUNTS=(10 25 50 100)
-WORD_COUNTS=(0 50 100 250)
-C_VALUES=(0.1 1.0 10.0)
+TAG_COUNTS=(5 10 25 50 100)
+WORD_COUNTS=(50 100 150 200 250)
+C_VALUES=(0.1 0.5 1.0 5.0 10.0)
 
 # Limit concurrent jobs
 MAX_JOBS=10
