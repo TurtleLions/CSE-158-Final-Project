@@ -5,6 +5,8 @@ import numpy as np
 import argparse
 import sys
 import re
+import gzip
+import os
 from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -22,16 +24,23 @@ TOP_N_WORDS_COUNT = args.top_n_words
 
 print(f"Starting Run: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}")
 
+# Helper function to handle gzip files (added to support .json.gz)
+def smart_open(file_path, mode='rt', encoding='utf-8'):
+    if os.path.exists(file_path):
+        if file_path.endswith('.gz'):
+            return gzip.open(file_path, mode=mode, encoding=encoding)
+        return open(file_path, mode=mode, encoding=encoding)
+
 # Load data
 print("Loading user/item interactions")
 user_data = []
-with open('australian_users_items.json.gz', 'rt', encoding='utf-8') as f:
+with smart_open('australian_users_items.json.gz', 'rt', encoding='utf-8') as f:
     for line in f:
         user_data.append(ast.literal_eval(line))
 
 print("Loading game metadata")
 game_data = []
-with open('steam_new.json.gz', 'rt', encoding='utf-8') as f:
+with smart_open('steam_new.json.gz', 'rt', encoding='utf-8') as f:
     for line in f:
         try:
             game_data.append(ast.literal_eval(line))
@@ -42,7 +51,7 @@ with open('steam_new.json.gz', 'rt', encoding='utf-8') as f:
 user_reviews = {}
 if TOP_N_WORDS_COUNT > 0:
     print("Loading user reviews")
-    with open('australian_user_reviews.json.gz', 'rt', encoding='utf-8') as f:
+    with smart_open('australian_user_reviews.json.gz', 'rt', encoding='utf-8') as f:
         for line in f:
             review_node = ast.literal_eval(line)
             user_id = str(review_node['user_id'])
