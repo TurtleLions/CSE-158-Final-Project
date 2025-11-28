@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, roc_auc_score, average_precision_score
+from sklearn.metrics import classification_report, roc_auc_score, average_precision_score, roc_curve
 from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 
@@ -104,3 +104,25 @@ pr_auc = average_precision_score(y_test, y_probs)
 
 print(f"ROC AUC: {auc:.4f}")
 print(f"PR AUC:  {pr_auc:.4f}")
+
+fpr, tpr, thresholds = roc_curve(y_test, y_probs)
+
+# plotting
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, label=f'Logistic Regression (AUC = {auc:.2f})')
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve for Game Prediction')
+plt.legend(loc='lower right')
+plt.grid(True)
+plt.savefig('roc_curve_base.png')
+
+plt.figure(figsize=(10, 5))
+sns.barplot(x=features, y=np.abs(model.coef_[0]))
+plt.title('Feature Importance (Coefficient Magnitude)')
+plt.ylabel('Absolute Coefficient')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig('feature_importance_base.png')
