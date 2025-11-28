@@ -305,4 +305,4 @@ auc_score = roc_auc_score(y_test, y_pred_probability)
 
 # Output CSV format for the bash script to capture
 # DATA_ROW: is what is searched for by grid_sweep.sh
-print(f"DATA_ROW: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}, C={REG_C}, AUC={auc_score:.4f}")
+print(f"DATA_ROW:{TOP_N_TAGS_COUNT},{TOP_N_WORDS_COUNT},{REG_C},{auc_score:.4f}")

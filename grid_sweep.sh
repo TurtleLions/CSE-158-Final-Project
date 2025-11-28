@@ -25,7 +25,7 @@ for t in "${TAG_COUNTS[@]}"; do
             echo "Launching: Tags=$t, Words=$w, C=$c"
             
             (
-                python grid_search_model.py --top_n_tags $t --top_n_words $w --reg_C $c | \
+                python -u grid_search_model.py --top_n_tags $t --top_n_words $w --reg_C $c | \
                 grep "DATA_ROW:" | \
                 sed 's/DATA_ROW://' >> sweep_results.csv
             ) &
