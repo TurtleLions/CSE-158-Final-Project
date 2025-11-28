@@ -17,47 +17,72 @@ from sklearn.preprocessing import StandardScaler
 parser = argparse.ArgumentParser(description='Run model with variable feature parameters')
 parser.add_argument('--top_n_tags', type=int, default=25, help='Number of top game tags to track for affinity')
 parser.add_argument('--top_n_words', type=int, default=0, help='Number of top review words to track for affinity (0 to disable)')
+parser.add_argument('--reg_C', type=float, default=1.0, help='Inverse of regularization strength (smaller = stronger reg)')
 args = parser.parse_args()
 
 TOP_N_TAGS_COUNT = args.top_n_tags
 TOP_N_WORDS_COUNT = args.top_n_words
+REG_C = args.reg_C
 
-print(f"Starting Run: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}")
+print(f"Starting Run: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}, C={REG_C}")
 
-# Helper function to handle gzip files (added to support .json.gz)
+# Helper function to handle gzip files (Corrected to never return None)
 def smart_open(file_path, mode='rt', encoding='utf-8'):
+    # Try to open the file if the path exists exactly as given
     if os.path.exists(file_path):
         if file_path.endswith('.gz'):
             return gzip.open(file_path, mode=mode, encoding=encoding)
         return open(file_path, mode=mode, encoding=encoding)
+    
+    # If not found, check if a .gz version exists
+    gz_path = file_path + '.gz'
+    if os.path.exists(gz_path):
+        return gzip.open(gz_path, mode=mode, encoding=encoding)
+
+    # Fallback: try opening original path anyway to raise the standard FileNotFoundError
+    return open(file_path, mode=mode, encoding=encoding)
 
 # Load data
 print("Loading user/item interactions")
 user_data = []
-with smart_open('australian_users_items.json.gz', 'rt', encoding='utf-8') as f:
-    for line in f:
-        user_data.append(ast.literal_eval(line))
+# Using smart_open handles both .json and .json.gz
+try:
+    with smart_open('australian_users_items.json.gz', 'rt', encoding='utf-8') as f:
+        for line in f:
+            user_data.append(ast.literal_eval(line))
+except FileNotFoundError:
+    print("Error: australian_users_items.json.gz not found.")
+    sys.exit(1)
 
 print("Loading game metadata")
 game_data = []
-with smart_open('steam_new.json.gz', 'rt', encoding='utf-8') as f:
-    for line in f:
-        try:
-            game_data.append(ast.literal_eval(line))
-        except:
-            continue
+try:
+    # Based on your logs, you are using steam_new.json.gz
+    with smart_open('steam_new.json.gz', 'rt', encoding='utf-8') as f:
+        for line in f:
+            try:
+                game_data.append(ast.literal_eval(line))
+            except:
+                continue
+except FileNotFoundError:
+    print("Error: steam_new.json.gz not found.")
+    sys.exit(1)
 
 # Load reviews for bag of words
 user_reviews = {}
 if TOP_N_WORDS_COUNT > 0:
     print("Loading user reviews")
-    with smart_open('australian_user_reviews.json.gz', 'rt', encoding='utf-8') as f:
-        for line in f:
-            review_node = ast.literal_eval(line)
-            user_id = str(review_node['user_id'])
-            # Aggregate all review text for this user
-            full_text = " ".join([r.get('review', '') for r in review_node.get('reviews', [])])
-            user_reviews[user_id] = full_text
+    try:
+        with smart_open('australian_user_reviews.json.gz', 'rt', encoding='utf-8') as f:
+            for line in f:
+                review_node = ast.literal_eval(line)
+                user_id = str(review_node['user_id'])
+                # Aggregate all review text for this user
+                full_text = " ".join([r.get('review', '') for r in review_node.get('reviews', [])])
+                user_reviews[user_id] = full_text
+    except FileNotFoundError:
+        print("Warning: Reviews file not found. Skipping text features.")
+        TOP_N_WORDS_COUNT = 0
 
 # Process game metadata
 games_dict = {}
@@ -261,7 +286,8 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-model = LogisticRegression(max_iter=1000)
+# UPDATED: Use the passed REG_C parameter
+model = LogisticRegression(C=REG_C, max_iter=1000)
 model.fit(X_train_scaled, y_train)
 y_pred_probability = model.predict_proba(X_test_scaled)[:, 1]
 
@@ -269,10 +295,4 @@ auc_score = roc_auc_score(y_test, y_pred_probability)
 
 # Output CSV format for the bash script to capture
 # RESULT: is what is searched for by grid_sweep.sh
-print(f"RESULT: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}, AUC={auc_score:.4f}")
-
-# Plot code (not needed for now)
-# plt.figure(figsize=(10, 5))
-# sns.barplot(x=features, y=np.abs(model.coef_[0]))
-# plt.title(f'Feature Importance (Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT})')
-# plt.savefig(f'feat_imp_t{TOP_N_TAGS_COUNT}_w{TOP_N_WORDS_COUNT}.png')
+print(f"RESULT: Tags={TOP_N_TAGS_COUNT}, Words={TOP_N_WORDS_COUNT}, C={REG_C}, AUC={auc_score:.4f}")
