@@ -7,6 +7,7 @@ import sys
 import re
 import gzip
 import os
+import gc
 from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -57,14 +58,14 @@ except FileNotFoundError:
 print("Loading game metadata")
 game_data = []
 try:
-    with smart_open('steam_reviews.json.gz', 'rt', encoding='utf-8') as f:
+    with smart_open('steam_games.json.gz', 'rt', encoding='utf-8') as f:
         for line in f:
             try:
                 game_data.append(ast.literal_eval(line))
             except:
                 continue
 except FileNotFoundError:
-    print("Error: steam_new.json.gz not found.")
+    print("Error: steam_games.json.gz not found.")
     sys.exit(1)
 
 # Load reviews for bag of words
@@ -150,6 +151,9 @@ for user in user_data:
     else:
         user_tag_profiles[user_id] = {}
 
+del user_data
+gc.collect()
+
 # Review word profiles and bag of words
 user_word_profiles = {}
 if TOP_N_WORDS_COUNT > 0:
@@ -183,10 +187,15 @@ if TOP_N_WORDS_COUNT > 0:
             user_word_profiles[uid] = {w: counts[w]/total for w in counts}
         else:
             user_word_profiles[uid] = {}
+    del user_reviews
+    gc.collect()
 
 # make df
 df = pd.DataFrame(interactions)
 df = df[df['playtime_forever'] > 0] 
+
+del interactions
+gc.collect()
 
 item_popularity = df.groupby('item_id')['user_id'].nunique().reset_index()
 item_popularity.columns = ['item_id', 'item_popularity']
@@ -266,6 +275,7 @@ df_model['affinity_score'] = df_model.apply(calculate_tag_affinity, axis=1)
 if TOP_N_WORDS_COUNT > 0:
     print("Calculating review affinity scores")
     df_model['review_affinity_score'] = df_model.apply(calculate_review_affinity, axis=1)
+    
 
 def get_price(gid):
     return games_dict.get(gid, {}).get('price', 0)
