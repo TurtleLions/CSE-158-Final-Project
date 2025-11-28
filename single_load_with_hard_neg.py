@@ -7,10 +7,10 @@ import re
 import gzip
 import os
 import gc
-from collections import Counter
+from collections import Counter, defaultdict
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score, average_precision_score # Added average_precision_score
+from sklearn.metrics import roc_auc_score, average_precision_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import multiprocessing
@@ -61,15 +61,40 @@ except FileNotFoundError:
 
 # Load reviews
 user_reviews = {}
+
 if max(WORD_COUNTS) > 0:
     print("Loading user reviews", file=sys.stderr)
+    temp_reviews = defaultdict(list)
+    
     try:
-        with smart_open('australian_user_reviews.json.gz', 'rt', encoding='utf-8') as f:
+        with smart_open('steam_reviews.json.gz', 'rt', encoding='utf-8') as f:
             for line in f:
-                review_node = ast.literal_eval(line)
-                user_id = str(review_node['user_id'])
-                full_text = " ".join([r.get('review', '') for r in review_node.get('reviews', [])])
-                user_reviews[user_id] = full_text
+                try:
+                    review_node = ast.literal_eval(line)
+                    
+                    if 'user_id' in review_node:
+                        uid = str(review_node['user_id'])
+                    elif 'username' in review_node:
+                        uid = str(review_node['username'])
+                    else:
+                        continue
+
+                    # Text Extraction
+                    text = review_node.get('text', '')
+                    
+                    if text:
+                        temp_reviews[uid].append(text)
+                        
+                except Exception as e:
+                    continue
+        
+        # Join lists into single text blocks
+        for uid, text_list in temp_reviews.items():
+            user_reviews[uid] = " ".join(text_list)
+            
+        del temp_reviews
+        gc.collect()
+        
     except FileNotFoundError:
         print("Warning: Reviews file not found. Skipping text features.", file=sys.stderr)
         WORD_COUNTS = [0]
@@ -284,7 +309,6 @@ if __name__ == '__main__':
     
     print(f"Starting sweep of {len(param_list)} jobs using {CORES} cores...", file=sys.stderr)
     
-    # Updated header to include PR_AUC
     print("Tags,Words,C,ROC_AUC,PR_AUC")
     
     with multiprocessing.Pool(processes=CORES) as pool:
