@@ -13,6 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, roc_auc_score, roc_curve
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 # Parse command line arguments for sweep
 parser = argparse.ArgumentParser(description='Run model with variable feature parameters')
@@ -162,8 +163,9 @@ if TOP_N_WORDS_COUNT > 0:
     
     # Tokenizer helper
     def get_tokens(text):
-        # Simple regex to get words, ignore short ones like "a"
-        return [w.lower() for w in re.findall(r'\b[a-zA-Z]{3,}\b', text)]
+        # Regex for words + lowercase + filter stopwords
+        words = [w.lower() for w in re.findall(r'\b[a-zA-Z]{3,}\b', text)]
+        return [w for w in words if w not in ENGLISH_STOP_WORDS]
 
     # First pass through dataset to collect global word counts to find top N
     global_word_counter = Counter()
