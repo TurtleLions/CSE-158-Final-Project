@@ -41,62 +41,51 @@ print("Loading data")
 # Load User/Item Interactions
 print("Loading interactions")
 user_data = []
-try:
-    with smart_open('australian_users_items.json.gz') as f:
-        for line in f:
-            user_data.append(ast.literal_eval(line))
-except FileNotFoundError:
-    print("Error: australian_users_items.json.gz not found.")
-    sys.exit(1)
+with smart_open('australian_users_items.json.gz') as f:
+    for line in f:
+        user_data.append(ast.literal_eval(line))
 
 # Load Game Metadata
 print("Loading game metadata")
 games_dict = {}
-try:
-    with smart_open('steam_games.json.gz') as f:
-        for line in f:
-            try:
-                game = ast.literal_eval(line)
-                gid = None
-                if 'id' in game: gid = str(game['id'])
-                elif 'app_id' in game: gid = str(game['app_id'])
-                if not gid: continue
-                
-                # Extract Price
-                price = game.get('price', 0)
-                if isinstance(price, str):
-                    price = 0 if 'free' in price.lower() else float(price) if price.replace('.', '', 1).isdigit() else 0
-                
-                # Extract Tags
-                tags = game.get('tags', []) + game.get('genres', [])
-                tags_str = " ".join([t.lower() for t in tags])
-                
-                games_dict[gid] = {'price': price, 'tags': tags_str}
-            except:
-                continue
-except FileNotFoundError:
-    print("Error: steam_games.json.gz not found.")
-    sys.exit(1)
+with smart_open('steam_games.json.gz') as f:
+    for line in f:
+        try:
+            game = ast.literal_eval(line)
+            gid = None
+            if 'id' in game: gid = str(game['id'])
+            elif 'app_id' in game: gid = str(game['app_id'])
+            if not gid: continue
+            
+            # Extract Price
+            price = game.get('price', 0)
+            if isinstance(price, str):
+                price = 0 if 'free' in price.lower() else float(price) if price.replace('.', '', 1).isdigit() else 0
+            
+            # Extract Tags
+            tags = game.get('tags', []) + game.get('genres', [])
+            tags_str = " ".join([t.lower() for t in tags])
+            
+            games_dict[gid] = {'price': price, 'tags': tags_str}
+        except:
+            continue
 
 # Load Reviews
 print("Loading reviews")
 user_reviews_text = defaultdict(list)
-try:
-    with smart_open('steam_reviews.json.gz') as f:
-        for line in f:
-            try:
-                node = ast.literal_eval(line)
-                # Resolve ID
-                uid = str(node.get('user_id', node.get('username', '')))
-                if not uid: continue
-                
-                text = node.get('text', '')
-                if text:
-                    user_reviews_text[uid].append(clean_text(text))
-            except:
-                continue
-except FileNotFoundError:
-    print("Warning: Reviews file not found. Text features will be empty.")
+with smart_open('steam_reviews.json.gz') as f:
+    for line in f:
+        try:
+            node = ast.literal_eval(line)
+            # Resolve ID
+            uid = str(node.get('user_id', node.get('username', '')))
+            if not uid: continue
+            
+            text = node.get('text', '')
+            if text:
+                user_reviews_text[uid].append(clean_text(text))
+        except:
+            continue
 
 # Collapse reviews into single string per user
 user_reviews_map = {uid: " ".join(texts) for uid, texts in user_reviews_text.items()}
