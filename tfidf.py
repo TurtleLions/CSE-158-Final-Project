@@ -221,6 +221,10 @@ X_u_train, X_u_test, X_i_train, X_i_test, X_s_train, X_s_test, y_train, y_test =
     X_u, X_i, X_side, y, test_size=0.2, random_state=42
 )
 
+del X_side, X_u, X_i, y
+del full_df
+gc.collect()
+
 print("Generating model")
 
 # Define inputs
@@ -266,7 +270,7 @@ history = model.fit(
     batch_size=BATCH_SIZE,
     epochs=EPOCHS,
     validation_data=([X_u_test, X_i_test, X_s_test], y_test),
-    verbose=1
+    verbose=2
 )
 
 print("Finished training")
