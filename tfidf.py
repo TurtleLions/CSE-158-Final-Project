@@ -14,7 +14,7 @@ import gc
 import re
 from collections import defaultdict
 
-MAX_TEXT_FEATURES = 3000
+MAX_TEXT_FEATURES = 1000
 MAX_TAG_FEATURES = 100
 EMBEDDING_DIM = 64
 BATCH_SIZE = 256
@@ -186,13 +186,13 @@ n_items = len(item_encoder.classes_)
 # TF-IDF on User Reviews
 print("Vectorizing reviews")
 reviews_series = full_df['user_id'].map(lambda u: user_reviews_map.get(u, ""))
-tfidf_rev = TfidfVectorizer(max_features=MAX_TEXT_FEATURES, stop_words='english')
+tfidf_rev = TfidfVectorizer(max_features=MAX_TEXT_FEATURES, stop_words='english', dtype=np.float32)
 X_reviews = tfidf_rev.fit_transform(reviews_series).toarray().astype(np.float32)
 
 # TF-IDF on Game Tags
 print("Vectorizing game tags")
 tags_series = full_df['item_id'].map(lambda i: games_dict.get(i, {}).get('tags', ""))
-tfidf_tags = TfidfVectorizer(max_features=MAX_TAG_FEATURES, stop_words='english')
+tfidf_tags = TfidfVectorizer(max_features=MAX_TAG_FEATURES, stop_words='english', dtype=np.float32)
 X_tags = tfidf_tags.fit_transform(tags_series).toarray().astype(np.float32)
 
 # Numerical Features (Price & Popularity)
