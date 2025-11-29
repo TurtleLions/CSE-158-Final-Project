@@ -234,8 +234,8 @@ del full_df
 gc.collect()
 
 # Latent factor embeddings
-u_emb = layers.Embedding(n_users, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-4))(user_input)
-i_emb = layers.Embedding(n_items, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-4))(item_input)
+u_emb = layers.Embedding(n_users, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-5))(user_input)
+i_emb = layers.Embedding(n_items, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-5))(item_input)
 
 u_vec = layers.Flatten()(u_emb)
 i_vec = layers.Flatten()(i_emb)
