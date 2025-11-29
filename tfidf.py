@@ -14,9 +14,9 @@ import gc
 import re
 from collections import defaultdict
 
-MAX_TEXT_FEATURES = 400
+MAX_TEXT_FEATURES = 3000
 MAX_TAG_FEATURES = 100
-EMBEDDING_DIM = 32
+EMBEDDING_DIM = 64
 BATCH_SIZE = 256
 EPOCHS = 5
 
@@ -248,9 +248,9 @@ i_vec = layers.Flatten()(i_emb)
 
 mf_layer = layers.Dot(axes=1)([u_vec, i_vec])
 
-dense_1 = layers.Dense(128, activation='relu')(side_input)
-dense_1 = layers.Dropout(0.3)(dense_1)
-dense_2 = layers.Dense(64, activation='relu')(dense_1)
+dense_1 = layers.Dense(256, activation='relu')(side_input)
+dense_1 = layers.Dropout(0.4)(dense_1)
+dense_2 = layers.Dense(128, activation='relu')(dense_1)
 
 # Include the raw user/item vectors in the deep path too, to learn non-linear interactions
 concat = layers.Concatenate()([mf_layer, u_vec, i_vec, dense_2])
