@@ -14,7 +14,7 @@ import gc
 import re
 from collections import defaultdict
 
-MAX_TEXT_FEATURES = 1000
+MAX_TEXT_FEATURES = 500
 MAX_TAG_FEATURES = 100
 EMBEDDING_DIM = 64
 BATCH_SIZE = 256
