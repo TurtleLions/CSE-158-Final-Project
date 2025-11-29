@@ -1,3 +1,6 @@
-Use python single_load.py > sweep_results.csv
+# CSE 158 Final Project
 
-BEST: 5 tags, 100 words, 0.5 C
+This project contains code for a steam game recommender model, utilizing a latent factor model, factorization machine, and TF-IDF.
+
+## Dependencies
+```pip install -r requirements.txt``` from base directory

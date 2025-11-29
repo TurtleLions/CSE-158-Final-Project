@@ -9,7 +9,6 @@ from sklearn.metrics import roc_auc_score, average_precision_score
 import ast
 import gzip
 import os
-import sys
 import gc
 import re
 from collections import defaultdict
