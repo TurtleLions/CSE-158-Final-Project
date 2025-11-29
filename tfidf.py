@@ -14,15 +14,6 @@ import gc
 import re
 from collections import defaultdict
 
-gpus = tf.config.list_physical_devices('GPU')
-if gpus:
-    try:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-        print(f"Memory growth enabled for {len(gpus)} GPU(s).")
-    except RuntimeError as e:
-        print(e)
-
 MAX_TEXT_FEATURES = 400
 MAX_TAG_FEATURES = 100
 EMBEDDING_DIM = 32
@@ -231,24 +222,24 @@ print(f"Final Side Feature Dimension: {X_side.shape[1]}")
 del reviews_series, tags_series, X_reviews, X_tags, X_nums
 gc.collect()
 
-# Prepare Inputs
+# Prepare inputs
 X_u = full_df['user_idx'].values
 X_i = full_df['item_idx'].values
 y = full_df['target'].values
 
-# Train/Test Split
+# Train/Test split
 X_u_train, X_u_test, X_i_train, X_i_test, X_s_train, X_s_test, y_train, y_test = train_test_split(
     X_u, X_i, X_side, y, test_size=0.2, random_state=42
 )
 
 print("Generating model")
 
-# Define Inputs
+# Define inputs
 user_input = layers.Input(shape=(1,), name='user_input')
 item_input = layers.Input(shape=(1,), name='item_input')
 side_input = layers.Input(shape=(X_side.shape[1],), name='side_input')
 
-# Latent Factor Embeddings (MF Part)
+# Latent factor embeddings
 u_emb = layers.Embedding(n_users, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-6))(user_input)
 i_emb = layers.Embedding(n_items, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-6))(item_input)
 
@@ -261,11 +252,10 @@ dense_1 = layers.Dense(128, activation='relu')(side_input)
 dense_1 = layers.Dropout(0.3)(dense_1)
 dense_2 = layers.Dense(64, activation='relu')(dense_1)
 
-# Concatenate MF and Deep Paths
-# We include the raw user/item vectors in the deep path too, to learn non-linear interactions
+# Include the raw user/item vectors in the deep path too, to learn non-linear interactions
 concat = layers.Concatenate()([mf_layer, u_vec, i_vec, dense_2])
 
-# Final Prediction
+# Final prediction layer
 pred_layer = layers.Dense(64, activation='relu')(concat)
 output = layers.Dense(1, activation='sigmoid')(pred_layer)
 
@@ -299,7 +289,7 @@ pr = average_precision_score(y_test, preds)
 print(f"ROC AUC: {roc:.4f}")
 print(f"PR AUC:  {pr:.4f}")
 
-# Example Prediction
+# Example Predictions
 print("\nSample Predictions:")
 for i in range(5):
     p = preds[i][0]
