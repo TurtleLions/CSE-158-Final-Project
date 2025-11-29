@@ -221,9 +221,6 @@ X_u_train, X_u_test, X_i_train, X_i_test, X_s_train, X_s_test, y_train, y_test =
     X_u, X_i, X_side, y, test_size=0.2, random_state=42
 )
 
-del X_side, X_u, X_i, y
-del full_df
-gc.collect()
 
 print("Generating model")
 
@@ -231,6 +228,10 @@ print("Generating model")
 user_input = layers.Input(shape=(1,), name='user_input')
 item_input = layers.Input(shape=(1,), name='item_input')
 side_input = layers.Input(shape=(X_side.shape[1],), name='side_input')
+
+del X_side, X_u, X_i, y
+del full_df
+gc.collect()
 
 # Latent factor embeddings
 u_emb = layers.Embedding(n_users, EMBEDDING_DIM, embeddings_regularizer=regularizers.l2(1e-6))(user_input)
