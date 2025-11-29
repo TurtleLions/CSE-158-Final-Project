@@ -14,10 +14,19 @@ import gc
 import re
 from collections import defaultdict
 
-MAX_TEXT_FEATURES = 1000
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        print(f"Memory growth enabled for {len(gpus)} GPU(s).")
+    except RuntimeError as e:
+        print(e)
+
+MAX_TEXT_FEATURES = 400
 MAX_TAG_FEATURES = 100
 EMBEDDING_DIM = 32
-BATCH_SIZE = 512
+BATCH_SIZE = 256
 EPOCHS = 5
 
 def smart_open(file_path, mode='rt', encoding='utf-8'):
